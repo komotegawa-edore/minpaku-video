@@ -9,6 +9,11 @@ import sys
 import tempfile
 from pathlib import Path
 
+# Streamlit Cloud 用: src/ をパスに追加してパッケージを参照可能にする
+_src_dir = str(Path(__file__).resolve().parent.parent)
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
+
 import streamlit as st
 
 from minpaku_video.config import CONFIG_FILE, get_settings, set_api_keys
