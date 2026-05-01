@@ -1,0 +1,11 @@
+.venv/
+output/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+.git/
+.env
+.DS_Store
+*.mp3
+*.mp4

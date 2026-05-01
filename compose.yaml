@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - output:/app/output
+      - config:/root/.minpaku-video
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
+
+volumes:
+  output:
+  config:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 
 from minpaku_video.clients.claude import ClaudeClient
 from minpaku_video.clients.elevenlabs import ElevenLabsClient
@@ -23,6 +24,15 @@ STAGE_ORDER = [
     PipelineStage.METADATA_GENERATED,
 ]
 
+# ステージ名の日本語マッピング
+STAGE_LABELS = {
+    PipelineStage.PAGES_IMPORTED: "ページインポート",
+    PipelineStage.SCRIPTS_READY: "スクリプト生成",
+    PipelineStage.AUDIO_GENERATED: "音声生成",
+    PipelineStage.VIDEO_GENERATED: "動画生成",
+    PipelineStage.METADATA_GENERATED: "メタデータ生成",
+}
+
 
 class PipelineOrchestrator:
     def __init__(
@@ -32,22 +42,37 @@ class PipelineOrchestrator:
         *,
         from_stage: PipelineStage | None = None,
         auto_confirm: bool = False,
+        on_progress: Callable[[str, float], None] | None = None,
     ) -> None:
         self._state = state
         self._sm = state_manager
         self._from_stage = from_stage
         self._auto_confirm = auto_confirm
+        self._on_progress = on_progress
         self._claude: ClaudeClient | None = None
+
+    def _report_progress(self, message: str, progress: float) -> None:
+        """進捗コールバックを呼び出す（設定されている場合）。"""
+        if self._on_progress:
+            self._on_progress(message, progress)
 
     async def run(self) -> None:
         """パイプラインを実行する。"""
         try:
             start_idx = self._get_start_index()
+            total_stages = len(STAGE_ORDER) - start_idx
 
             for i in range(start_idx, len(STAGE_ORDER)):
                 target_stage = STAGE_ORDER[i]
-                await self._run_stage(target_stage)
+                stage_num = i - start_idx + 1
+                base_progress = (stage_num - 1) / total_stages
+                self._report_progress(
+                    STAGE_LABELS.get(target_stage, target_stage.value),
+                    base_progress,
+                )
+                await self._run_stage(target_stage, base_progress, 1.0 / total_stages)
 
+            self._report_progress("完了", 1.0)
             print_success("パイプライン完了!")
             console.print(f"  コスト合計: ${self._state.total_cost_usd():.4f}")
 
@@ -70,13 +95,18 @@ class PipelineOrchestrator:
                 return i
         return len(STAGE_ORDER)
 
-    async def _run_stage(self, target_stage: PipelineStage) -> None:
+    async def _run_stage(
+        self,
+        target_stage: PipelineStage,
+        base_progress: float = 0.0,
+        stage_weight: float = 1.0,
+    ) -> None:
         console.print(f"\n[bold blue]▶ ステージ: {target_stage.value}[/bold blue]")
 
         if target_stage == PipelineStage.SCRIPTS_READY:
-            await self._stage_scripts()
+            await self._stage_scripts(base_progress, stage_weight)
         elif target_stage == PipelineStage.AUDIO_GENERATED:
-            await self._stage_audio()
+            await self._stage_audio(base_progress, stage_weight)
         elif target_stage == PipelineStage.VIDEO_GENERATED:
             await self._stage_video()
         elif target_stage == PipelineStage.METADATA_GENERATED:
@@ -87,7 +117,9 @@ class PipelineOrchestrator:
             self._claude = ClaudeClient()
         return self._claude
 
-    async def _stage_scripts(self) -> None:
+    async def _stage_scripts(
+        self, base_progress: float = 0.0, stage_weight: float = 1.0
+    ) -> None:
         """スクリプト生成ステージ。"""
         # 全ページのスクリプトが準備済みなら skip
         if all(p.script_ready for p in self._state.pages):
@@ -96,10 +128,22 @@ class PipelineOrchestrator:
             return
 
         claude = await self._get_claude()
+
+        total_pages = len(self._state.pages)
+        for i, page in enumerate(self._state.pages):
+            if not page.script_ready:
+                page_progress = base_progress + (i / total_pages) * stage_weight
+                self._report_progress(
+                    f"スクリプト生成 ({i + 1}/{total_pages}ページ)",
+                    page_progress,
+                )
+
         await generate_scripts(self._state, self._sm, claude)
         self._sm.update_stage(self._state, PipelineStage.SCRIPTS_READY)
 
-    async def _stage_audio(self) -> None:
+    async def _stage_audio(
+        self, base_progress: float = 0.0, stage_weight: float = 1.0
+    ) -> None:
         """音声生成ステージ。"""
         audio_dir = self._sm.audio_dir()
 
@@ -108,7 +152,8 @@ class PipelineOrchestrator:
         else:
             tts = VoicevoxClient(speaker_id=self._state.speaker_id)
 
-        for page in self._state.pages:
+        total_pages = len(self._state.pages)
+        for i, page in enumerate(self._state.pages):
             if page.audio_ready:
                 logger.info(f"ページ {page.number}: 音声生成済み、スキップ")
                 continue
@@ -117,6 +162,12 @@ class PipelineOrchestrator:
                 raise ValueError(
                     f"ページ {page.number} のスクリプトがありません"
                 )
+
+            page_progress = base_progress + (i / total_pages) * stage_weight
+            self._report_progress(
+                f"音声生成 ({i + 1}/{total_pages}ページ)",
+                page_progress,
+            )
 
             audio_file = f"page_{page.number:02d}.mp3"
             output_path = audio_dir / audio_file

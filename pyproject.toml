@@ -17,10 +17,12 @@ dependencies = [
     "pymupdf>=1.24.0",
     "mutagen>=1.47.0",
     "httpx>=0.27.0",
+    "streamlit>=1.35.0",
 ]
 
 [project.scripts]
 minpaku-video = "minpaku_video.cli:app"
+minpaku-video-ui = "minpaku_video.app:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/minpaku_video"]
