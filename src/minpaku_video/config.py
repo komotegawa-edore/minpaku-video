@@ -98,7 +98,12 @@ def _load_streamlit_secrets() -> dict:
     try:
         import streamlit as st
 
-        return dict(st.secrets)
+        result = {}
+        for key in ("ANTHROPIC_API_KEY", "ELEVENLABS_API_KEY"):
+            val = st.secrets.get(key, "")
+            if val:
+                result[key] = val
+        return result
     except Exception:
         return {}
 

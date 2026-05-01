@@ -48,6 +48,11 @@ def _render_sidebar() -> None:
     st.sidebar.header("API設定")
 
     if _has_streamlit_secrets():
+        # Secrets のキーをシングルトンに反映
+        set_api_keys(
+            st.secrets.get("ANTHROPIC_API_KEY", ""),
+            st.secrets.get("ELEVENLABS_API_KEY", ""),
+        )
         st.sidebar.success("APIキーは Secrets で設定済みです")
         return
 
