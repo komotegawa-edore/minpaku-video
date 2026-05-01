@@ -1,0 +1,15 @@
+.env
+__pycache__/
+*.pyc
+.ruff_cache/
+dist/
+*.egg-info/
+output/
+.venv/
+
+# OS
+.DS_Store
+
+# Binary assets
+*.mp3
+*.mp4
