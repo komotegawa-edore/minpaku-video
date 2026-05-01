@@ -24,9 +24,31 @@ from minpaku_video.pipeline.orchestrator import PipelineOrchestrator
 from minpaku_video.pipeline.state import StateManager
 
 VOICE_PRESETS: dict[str, str] = {
-    "George": "JBFqnCBsd6RMkjVDRZzb",
-    "Bella": "hpp4J3VqNfWAUOO0d1Us",
+    "George (温かみのある語り手)": "JBFqnCBsd6RMkjVDRZzb",
+    "Bella (プロフェッショナル)": "hpp4J3VqNfWAUOO0d1Us",
+    "Alice (明瞭な教育者)": "Xb7hH8MSUJpSbSDYk0k2",
+    "Adam (力強い)": "pNInz6obpgDQGcFmaJgB",
+    "Bill (落ち着いた知性派)": "pqHfZKP75CvOlQylNhV4",
+    "Brian (深くて安心感)": "nPczCjzI2devNBz1zQrb",
+    "Callum (ハスキー)": "N2lVS1w4EtoT3dr4eOWO",
+    "Charlie (深くてエネルギッシュ)": "IKne3meq5aSn9XLyUdCD",
+    "Chris (チャーミング)": "iP95p4xoKVk53GoZ742B",
+    "Daniel (安定感のあるキャスター)": "onwK4e9ZLuTAKqWW03F9",
+    "Eric (滑らかで信頼感)": "cjVigY5qzO86Huf0OWal",
+    "Harry (力強い戦士)": "SOYHLrjzK2X1ezoPC6cr",
+    "Jessica (明るく楽しい)": "cgSgspJ2msm6clMCkdW9",
+    "Laura (熱心で個性的)": "FGY2WhTYpPnrIDTdsKH5",
+    "Liam (エネルギッシュ)": "TX3LPaxmHKxFdv7VOQHJ",
+    "Lily (しなやかな女優)": "pFZP5JQG7iQjIQuC4Bku",
+    "Matilda (知的でプロ)": "XrExE9yKIg1WjnnlVkGX",
+    "River (リラックス・中立)": "SAz9YHcvj6GT2YYXdXww",
+    "Roger (カジュアル)": "CwhRBWXzGAHq8TQ4Fs17",
+    "Sarah (落ち着いた自信)": "EXAVITQu4vr4xnSDxMaL",
+    "Will (リラックス楽観的)": "bIHbv24MWmeRgasZH58o",
 }
+
+# テスト音声ファイルのディレクトリ
+_VOICE_SAMPLES_DIR = Path(__file__).resolve().parent.parent.parent / "test_voices"
 
 
 def _load_saved_keys() -> tuple[str, str]:
@@ -123,6 +145,13 @@ def _render_main() -> None:
             speaker_id = st.number_input(
                 "VOICEVOX Speaker ID", min_value=0, value=3, step=1
             )
+
+    # ボイスプレビュー
+    if tts_engine == "ElevenLabs" and _VOICE_SAMPLES_DIR.exists():
+        sample_name = voice_name.split(" (")[0]  # "George (温かみ)" → "George"
+        candidates = list(_VOICE_SAMPLES_DIR.glob(f"{sample_name}_*.mp3"))
+        if candidates:
+            st.audio(str(candidates[0]), format="audio/mp3")
 
     # --- 実行ボタン ---
     st.divider()

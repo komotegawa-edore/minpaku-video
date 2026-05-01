@@ -24,6 +24,25 @@ app = typer.Typer(
 VOICE_PRESETS: dict[str, str] = {
     "george": "JBFqnCBsd6RMkjVDRZzb",
     "bella": "hpp4J3VqNfWAUOO0d1Us",
+    "alice": "Xb7hH8MSUJpSbSDYk0k2",
+    "adam": "pNInz6obpgDQGcFmaJgB",
+    "bill": "pqHfZKP75CvOlQylNhV4",
+    "brian": "nPczCjzI2devNBz1zQrb",
+    "callum": "N2lVS1w4EtoT3dr4eOWO",
+    "charlie": "IKne3meq5aSn9XLyUdCD",
+    "chris": "iP95p4xoKVk53GoZ742B",
+    "daniel": "onwK4e9ZLuTAKqWW03F9",
+    "eric": "cjVigY5qzO86Huf0OWal",
+    "harry": "SOYHLrjzK2X1ezoPC6cr",
+    "jessica": "cgSgspJ2msm6clMCkdW9",
+    "laura": "FGY2WhTYpPnrIDTdsKH5",
+    "liam": "TX3LPaxmHKxFdv7VOQHJ",
+    "lily": "pFZP5JQG7iQjIQuC4Bku",
+    "matilda": "XrExE9yKIg1WjnnlVkGX",
+    "river": "SAz9YHcvj6GT2YYXdXww",
+    "roger": "CwhRBWXzGAHq8TQ4Fs17",
+    "sarah": "EXAVITQu4vr4xnSDxMaL",
+    "will": "bIHbv24MWmeRgasZH58o",
 }
 
 STAGE_MAP: dict[str, PipelineStage] = {
@@ -48,7 +67,7 @@ def new(
     ),
     speaker: str = typer.Option(
         "george", "--speaker", "-S",
-        help="声 (george / bella) or VOICEVOX speaker ID",
+        help="声の名前 (george, bella, alice, adam, bill, brian, callum, charlie, chris, daniel, eric, harry, jessica, laura, liam, lily, matilda, river, roger, sarah, will) or VOICEVOX speaker ID",
     ),
 ) -> None:
     """PDFからプロジェクトを新規作成"""

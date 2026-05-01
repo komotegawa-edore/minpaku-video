@@ -13,3 +13,6 @@ output/
 # Binary assets
 *.mp3
 *.mp4
+
+# ただしアプリ内蔵アセットは追跡する
+!src/minpaku_video/assets/*.mp3
